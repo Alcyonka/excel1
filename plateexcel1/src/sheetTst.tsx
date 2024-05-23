@@ -54,11 +54,15 @@ socket.onmessage = (e: any) => {
  
   const onOp = useCallback((op: Op[]) => {
     const socket = wsRef.current;
+     console.log(socket)
+
     if (!socket) return;
+    console.log("send")
     socket.send(JSON.stringify({ req: "op", data: op }));
   }, []);
   
   const onChange = useCallback((d: Sheet[]) => {
+      console.log("onChange")
     setData(d);
   }, []);
 
@@ -66,6 +70,9 @@ socket.onmessage = (e: any) => {
     (sheetId: string, selection: Selection) => {
       const socket = wsRef.current;
       if (!socket) return;
+
+      console.log("afterSelectionChange")
+
       const s = {
         r: selection.row[0],
         c: selection.column[0],
