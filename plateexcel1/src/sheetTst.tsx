@@ -25,18 +25,25 @@ const SheetTst = (): React.ReactNode => {
 useEffect(() => {
   const socket = new WebSocket("ws://localhost:8081/ws");
   wsRef.current = socket;
- 
+ console.log("1")
   socket.onopen = () => {
     socket.send(JSON.stringify({ req: "getData" }));
+     console.log("2")
   };
   // In useEffect
 socket.onmessage = (e: any) => {
+
+     console.log("3")
   const msg = JSON.parse(e.data);
-  if (msg.req === "getData") {
-    setData(msg.data);
-  } else if (msg.req === "op") {
-    workbookRef.current?.applyOp(msg.data);
-  }
+      if (msg.req === "getData") {
+        setData(msg.data.map((d: any) => ({ id: d._id, ...d })));
+      } else if (msg.req === "op") {
+        workbookRef.current?.applyOp(msg.data);
+      } else if (msg.req === "addPresences") {
+        workbookRef.current?.addPresences(msg.data);
+      } else if (msg.req === "removePresences") {
+        workbookRef.current?.removePresences(msg.data);
+      }
 };
  
 }, []);
@@ -86,10 +93,8 @@ socket.onmessage = (e: any) => {
  
 
 // Workbook declaration
-if (!data){
-    return <div />;
-}
-else{
+if (!data) return <div />;
+
   return (
     <div style={{ width: "100%", height: "100vh" }}>
         <Workbook ref={workbookRef} data={data} onChange={onChange} onOp={onOp} hooks={{
@@ -97,9 +102,9 @@ else{
           }} />
     </div>
   );
-  }
+}
 
  
-}
+
  
 export default SheetTst;
