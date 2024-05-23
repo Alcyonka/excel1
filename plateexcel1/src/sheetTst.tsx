@@ -14,6 +14,7 @@ import { hashCode } from './utils';
  
 const SheetTst = (): React.ReactNode => {
     const [data, setData] = useState<Sheet[]>([{ name: "Sheet1" }]);
+    const [error, setError] = useState(false);
     const wsRef = useRef<WebSocket>();
     const workbookRef = useRef<WorkbookInstance>(null);
     const lastSelection = useRef<any>();
@@ -35,6 +36,9 @@ socket.onmessage = (e: any) => {
 
      console.log("3")
   const msg = JSON.parse(e.data);
+
+  console.log(msg.req);
+
       if (msg.req === "getData") {
         setData(msg.data.map((d: any) => ({ id: d._id, ...d })));
       } else if (msg.req === "op") {
@@ -90,7 +94,26 @@ socket.onmessage = (e: any) => {
     },
     [userId, username]
   );
- 
+
+    if (error)
+    return (
+      <div style={{ padding: 16 }}>
+        <p>Failed to connect to websocket server.</p>
+        <p>
+          Please note that this collabration demo connects to a local websocket
+          server (ws://localhost:8081/ws).
+        </p>
+        <p>
+          To make this work:
+          <ol>
+            <li>Clone the project</li>
+            <li>Run server in backend-demo/: node index.js</li>
+            <li>Make sure you also have mongodb running locally</li>
+            <li>Try again</li>
+          </ol>
+        </p>
+      </div>
+    );
 
 // Workbook declaration
 if (!data) return <div />;
