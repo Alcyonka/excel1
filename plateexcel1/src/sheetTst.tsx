@@ -13,7 +13,7 @@ import { v4 as uuidv4 } from "uuid";
 import { hashCode } from './utils';
  
 const SheetTst = (): React.ReactNode => {
-    const [data, setData] = useState<Sheet[]>();
+    const [data, setData] = useState<Sheet[]>([{ name: "Sheet1" }]);
     const wsRef = useRef<WebSocket>();
     const workbookRef = useRef<WorkbookInstance>(null);
     const lastSelection = useRef<any>();
@@ -84,6 +84,7 @@ socket.onmessage = (e: any) => {
     [userId, username]
   );
  
+
 // Workbook declaration
 if (!data){
     return <div />;
@@ -91,7 +92,7 @@ if (!data){
 else{
   return (
     <div style={{ width: "100%", height: "100vh" }}>
-        <Workbook ref={workbookRef} data={[{ name: "Sheet1" }]} onChange={onChange} onOp={onOp} hooks={{
+        <Workbook ref={workbookRef} data={data} onChange={onChange} onOp={onOp} hooks={{
             afterSelectionChange,
           }} />
     </div>
