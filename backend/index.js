@@ -26,8 +26,11 @@ const client = new MongoClient(uri);
 let presences = [];
 
 async function initMongoDB() {
-  await client.connect();
-  await client.db("admin").command({ ping: 1 });
+    
+ await client.connect();
+ await client.db("admin").command({ ping: 1 });
+  console.log("initMongo")
+
 }
 
 initMongoDB();
@@ -38,6 +41,7 @@ const port = process.env.PORT || 8081;
 async function getData() {
   const db = client.db(dbName);
   const data = await db.collection(collectionName).find().toArray();
+  console.log("data " + data[0])
   data.forEach((sheet) => {
     if (!_.isUndefined(sheet._id)) delete sheet._id;
   });
@@ -51,6 +55,7 @@ app.get("/", async (req, res) => {
 
 // drop current data and initialize a new one
 app.get("/init", async (req, res) => {
+    console.log("init")
   const db = client.db(dbName);
   const coll = db.collection(collectionName);
   await coll.deleteMany();
@@ -58,6 +63,7 @@ app.get("/init", async (req, res) => {
   res.json({
     ok: true,
   });
+
 });
 
 const server = app.listen(port, () => {
@@ -79,9 +85,11 @@ const wss = new SocketServer({ server, path: "/ws" });
 wss.on("connection", (ws) => {
   ws.id = uuid.v4();
   connections[ws.id] = ws;
-
+  console.log("ws.id " + ws.id)
+  
   ws.on("message", async (data) => {
     const msg = JSON.parse(data.toString());
+    console.log("msg.req " + msg.req)
     if (msg.req === "getData") {
       ws.send(
         JSON.stringify({

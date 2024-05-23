@@ -13,7 +13,18 @@ import { v4 as uuidv4 } from "uuid";
 import { hashCode } from './utils';
  
 const SheetTst = (): React.ReactNode => {
-    const [data, setData] = useState<Sheet[]>([{ name: "Sheet1" }]);
+    const [data, setData] = useState<Sheet[]>([{
+  name: "Demo",
+  id: "6dcbe3df-f0af-4478-95e5-9025f2134e3f",
+  celldata: [{ r: 0, c: 0, v: null }],
+  order: 0,
+  row: 84,
+  column: 60,
+  config: {},
+  pivotTable: null,
+  isPivotTable: false,
+  status: 0,
+}]);
     const [error, setError] = useState(false);
     const wsRef = useRef<WebSocket>();
     const workbookRef = useRef<WorkbookInstance>(null);
@@ -26,20 +37,24 @@ const SheetTst = (): React.ReactNode => {
 useEffect(() => {
   const socket = new WebSocket("ws://localhost:8081/ws");
   wsRef.current = socket;
- console.log("1")
+// console.log("1")
   socket.onopen = () => {
     socket.send(JSON.stringify({ req: "getData" }));
-     console.log("2")
+ //    console.log("2")
   };
   // In useEffect
+
 socket.onmessage = (e: any) => {
 
-     console.log("3")
+  //   console.log("3")
   const msg = JSON.parse(e.data);
 
-  console.log(msg.req);
+  console.log("msg.req "+ msg.req);
 
       if (msg.req === "getData") {
+
+          console.log("msg.data "+ msg.data);
+
         setData(msg.data.map((d: any) => ({ id: d._id, ...d })));
       } else if (msg.req === "op") {
         workbookRef.current?.applyOp(msg.data);
@@ -54,7 +69,7 @@ socket.onmessage = (e: any) => {
  
   const onOp = useCallback((op: Op[]) => {
     const socket = wsRef.current;
-     console.log(socket)
+    // console.log("socket " + socket)
 
     if (!socket) return;
     console.log("send")
@@ -83,7 +98,10 @@ socket.onmessage = (e: any) => {
       ) {
         return;
       }
+       
+
       lastSelection.current = s;
+      console.log("sheetId " + sheetId + "username " + username + "userId " + userId +  "selection "+lastSelection.current)
       socket.send(
         JSON.stringify({
           req: "addPresences",
