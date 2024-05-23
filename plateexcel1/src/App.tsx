@@ -27,7 +27,7 @@ function App() {
       <Routes>
             <Route path="/" element={<Navigate to={`/documents/${uuidv4()}`} />} />
             
-            <Route path="/documents/:id" element ={SheetTst} />
+            <Route path="/documents/:id" element ={SheetTst()} />
   
         </Routes>
       </Router>
