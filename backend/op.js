@@ -6,6 +6,9 @@ const _ = require("lodash");
  * @param {any[]} ops op list
  */
 async function applyOp(collection, ops) {
+
+    console.log("collection " + collection.collectionName)
+
   const operations = [];
   // eslint-disable-next-line no-restricted-syntax
   for (const op of ops) {
@@ -89,6 +92,10 @@ async function applyOp(collection, ops) {
       /**
        * cell update
        */
+
+        console.log("cell update")
+        console.log("op.value " + op.value)
+
       const key = ["celldata.$[e].v", ...path.slice(3)].join(".");
       const [, r, c] = path;
       const options = { arrayFilters: [{ "e.r": r, "e.c": c }] };
@@ -104,7 +111,8 @@ async function applyOp(collection, ops) {
                 [key]: op.value,
               },
             };
-      if (path.length === 3) {
+        if (path.length === 3) {
+            
         const cellExists = await collection.countDocuments(
           {
             ...filter,
@@ -116,12 +124,24 @@ async function applyOp(collection, ops) {
             },
           },
           { limit: 1 }
-        );
-        if (cellExists) {
-          operations.push({
+            );
+
+            console.log("cell collection = " + cellExists);
+
+            if (cellExists) {
+
+                console.log("Cell exists = " + cellExists);
+
+                operations.push({ 
+
             updateOne: { filter, update: updater, ...options },
           });
-        } else {
+            } else {
+
+                console.log("Cell not exists = " + cellExists);
+                console.log("filter = " + JSON.stringify(filter, null, 2));
+                console.log(op.value);
+
           operations.push({
             updateOne: {
               filter,

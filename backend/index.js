@@ -28,9 +28,7 @@ let presences = [];
 async function initMongoDB() {
     
  await client.connect();
- await client.db("admin").command({ ping: 1 });
-  console.log("initMongo")
-
+    await client.db("admin").command({ ping: 1 });
 }
 
 initMongoDB();
@@ -40,10 +38,18 @@ const port = process.env.PORT || 8081;
 
 async function getData() {
   const db = client.db(dbName);
-  const data = await db.collection(collectionName).find().toArray();
-  console.log("data " + data[0])
+    const data = await db.collection(collectionName).find().toArray();
+
+    const result = await db.command({ ping: 1 });
+    console.log(result);
+    console.log("data " + data[0])
+
   data.forEach((sheet) => {
-    if (!_.isUndefined(sheet._id)) delete sheet._id;
+      if (!_.isUndefined(sheet._id)) delete sheet._id;
+      console.log("sheet._id = " + sheet._id)
+      console.log("sheet.celldata[0].r = " + sheet.celldata[0].r)
+      console.log("sheet.celldata[0].c = " + sheet.celldata[0].c)
+      console.log("sheet.celldata[0].v = " + sheet.celldata[0].v)
   });
   return data;
 }
@@ -89,7 +95,9 @@ wss.on("connection", (ws) => {
   
   ws.on("message", async (data) => {
     const msg = JSON.parse(data.toString());
-    console.log("msg.req " + msg.req)
+      console.log("msg.req " + msg.req)
+      console.log(JSON.stringify(msg, null, 2));
+
     if (msg.req === "getData") {
       ws.send(
         JSON.stringify({
@@ -97,16 +105,23 @@ wss.on("connection", (ws) => {
           data: await getData(),
         })
       );
-      ws.send(JSON.stringify({ req: "addPresences", data: presences }));
+        ws.send(JSON.stringify({ req: "addPresences", data: presences }));
+        console.log("presences " + JSON.stringify(presences, null, 2));
+
     } else if (msg.req === "op") {
       await applyOp(client.db(dbName).collection(collectionName), msg.data);
-      broadcastToOthers(ws.id, data.toString());
+        broadcastToOthers(ws.id, data.toString());
+        console.log("op data.toString " + data.toString());
+        console.log("op msg.data " + JSON.stringify(msg.data, null, 2));
+
     } else if (msg.req === "addPresences") {
       ws.presences = msg.data;
       broadcastToOthers(ws.id, data.toString());
       presences = _.differenceBy(presences, msg.data, (v) =>
         v.userId == null ? v.username : v.userId
-      ).concat(msg.data);
+        ).concat(msg.data);
+        console.log("addPresences concat " + JSON.stringify(presences, null, 2));
+
     } else if (msg.req === "removePresences") {
       broadcastToOthers(ws.id, data.toString());
     }

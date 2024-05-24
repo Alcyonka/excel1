@@ -12,7 +12,8 @@ import { Sheet, Op, Selection, colors } from "@fortune-sheet/core";
 import { v4 as uuidv4 } from "uuid";
 import { hashCode } from './utils';
 import SheetTst from './sheetTst';
-import {Example} from './Collabration.stories'
+
+
 
 import {
   BrowserRouter as Router,
@@ -22,13 +23,14 @@ import {
 } from 'react-router-dom'
  
 function App() {
+    const { Example } = require("./Collabration.stories");
   return (
     <div>
       <Router>
       <Routes>
             <Route path="/" element={<Navigate to={`/`} />} />
             
-            <Route path="/worksheet" element ={SheetTst()} />
+                  <Route path="/worksheet" element={ <Example />} />
   
         </Routes>
       </Router>

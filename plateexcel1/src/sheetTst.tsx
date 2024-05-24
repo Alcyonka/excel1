@@ -55,13 +55,20 @@ socket.onmessage = (e: any) => {
 
           console.log("msg.data "+ msg.data);
 
-        setData(msg.data.map((d: any) => ({ id: d._id, ...d })));
+          setData(msg.data.map((d: any) => ({ id: d._id, ...d })));
+          console.log(JSON.stringify(msg, null, 2));
+
       } else if (msg.req === "op") {
-        workbookRef.current?.applyOp(msg.data);
+          workbookRef.current?.applyOp(msg.data);
+          console.log(JSON.stringify(msg, null, 2));
+
       } else if (msg.req === "addPresences") {
-        workbookRef.current?.addPresences(msg.data);
+          workbookRef.current?.addPresences(msg.data);
+
+          console.log(JSON.stringify(msg, null, 2));
       } else if (msg.req === "removePresences") {
-        workbookRef.current?.removePresences(msg.data);
+          workbookRef.current?.removePresences(msg.data);
+          console.log(JSON.stringify(msg, null, 2));
       }
 };
  
