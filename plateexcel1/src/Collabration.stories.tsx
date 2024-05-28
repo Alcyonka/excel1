@@ -9,7 +9,8 @@ import React, {
   import { Sheet, Op, Selection, colors } from "@fortune-sheet/core";
   import { Workbook, WorkbookInstance } from "@fortune-sheet/react";
   import { v4 as uuidv4 } from "uuid";
-  import { hashCode } from "./utils";
+import { hashCode } from "./utils";
+import { useParams } from 'react-router-dom';
   
   export default {
     component: Workbook,
@@ -25,13 +26,19 @@ import React, {
       const _userId = uuidv4();
       return { username: `User-${_userId.slice(0, 3)}`, userId: _userId };
     }, []);
+      const { id: documentId } = useParams()
+      const documentObjectId = new URL(document.location.href).searchParams.get("docId")
   
-    useEffect(() => {
-      const socket = new WebSocket("ws://localhost:8081/ws");
+      useEffect(() => {
+          console.log("documentId ", documentId)
+
+        const socket = new WebSocket(`ws://localhost:8081/workbook/:id`);
+          //const socket = new WebSocket(`ws://localhost:8081/workbook/${documentId}`);
+
       wsRef.current = socket;
   
       socket.onopen = () => {
-        socket.send(JSON.stringify({ req: "getData" }));
+          socket.send(JSON.stringify({ req: "getData", sheetId: documentId }));
       };
       socket.onmessage = (e) => {
         const msg = JSON.parse(e.data);

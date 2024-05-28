@@ -3,4 +3,7 @@
 # dependencies
 /node_modules
 /backend/node_modules
+/backend1/node_modules
 /plateexcel1/node_modules
+
+.vs

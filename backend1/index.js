@@ -1,13 +1,10 @@
 /* eslint-disable no-console */
-//import queryString from "query-string";
-
 const express = require("express");
 const { MongoClient } = require("mongodb");
 const SocketServer = require("ws").Server;
 const uuid = require("uuid");
 const _ = require("lodash");
 const { applyOp } = require("./op");
-
 
 const defaultData = {
   name: "Demo",
@@ -22,7 +19,7 @@ const defaultData = {
   status: 0,
 };
 
-const dbName = "fortune-sheet";
+const dbName = "google-docs-clone";
 const collectionName = "workbook";
 const uri = "mongodb://localhost:27017";
 const client = new MongoClient(uri);
@@ -37,7 +34,9 @@ async function initMongoDB() {
 initMongoDB();
 
 const app = express();
-const port = process.env.PORT || 8081;
+const port = process.env.PORT || 8082;
+const http = require('http').Server(app)
+const io = require('socket.io')(http) 
 
 async function getData() {
   const db = client.db(dbName);
@@ -75,14 +74,10 @@ app.get("/init", async (req, res) => {
 
 });
 
-app.get("/workbook/:id", async (req, res) => {
-    console.log(req.params.objectId)
-   // res.json(await findDocumentByObjectId(req.params.objectId));
-});
-
 const server = app.listen(port, () => {
   console.info(`running on port ${port}`);
 });
+
 
 const connections = {};
 
@@ -94,28 +89,17 @@ const broadcastToOthers = (selfId, data) => {
   });
 };
 
-const wss = new SocketServer({ server, path: "/workbook/:id" });
+const wss = new SocketServer({ server, path: "/ws" });
 
-//const url = require('url')
-
-wss.on("connection", (ws, req) => {
-    console.log("query ", req.url); 
-   /* const [_path, params] = connectionRequest?.url?.split("?");
-    const connectionParams = queryString.parse(params);
-    console.log(connectionParams);
-    */
- 
+wss.on("connection", (ws) => {
   ws.id = uuid.v4();
   connections[ws.id] = ws;
-  console.log("ws.id " + ws.id)
+    console.log("Client connected " + ws.id)
   
   ws.on("message", async (data) => {
     const msg = JSON.parse(data.toString());
       console.log("msg.req " + msg.req)
       console.log(JSON.stringify(msg, null, 2));
-     /* ws.id = msg.sheetId;
-      connections[ws.id] = ws;
-      console.log("ws.id " + ws.id)*/
 
     if (msg.req === "getData") {
       ws.send(
