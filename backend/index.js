@@ -44,15 +44,9 @@ async function getData() {
     const data = await db.collection(collectionName).find().toArray();
 
     const result = await db.command({ ping: 1 });
-    console.log(result);
-    console.log("data " + data[0])
 
   data.forEach((sheet) => {
       if (!_.isUndefined(sheet._id)) delete sheet._id;
-      console.log("sheet._id = " + sheet._id)
-      console.log("sheet.celldata[0].r = " + sheet.celldata[0].r)
-      console.log("sheet.celldata[0].c = " + sheet.celldata[0].c)
-      console.log("sheet.celldata[0].v = " + sheet.celldata[0].v)
   });
   return data;
 }
@@ -75,10 +69,34 @@ app.get("/init", async (req, res) => {
 
 });
 
-app.get("/workbook/:id", async (req, res) => {
-    console.log(req.params.objectId)
+app.get("/workbook/:objectId", async (req, res) => {
+    console.log("AAAAAAA ", req.params.objectId)
    // res.json(await findDocumentByObjectId(req.params.objectId));
 });
+
+async function findOrCreateDocument(id, documentObjectId) {
+    console.log("creating");
+    if (id == null) return
+    const db = client.db(dbName);
+    console.log("creating new");
+    const newData = {
+        name: id,
+        id: id,
+        celldata: [{ r: 0, c: 0, v: null }],
+        order: 0,
+        row: 84,
+        column: 60,
+        config: {},
+        pivotTable: null,
+        isPivotTable: false,
+        status: 0,
+        documentId: documentObjectId
+    };
+    console.log("created");
+    await db.collection(collectionName).insertOne(newData);
+
+}
+
 
 const server = app.listen(port, () => {
   console.info(`running on port ${port}`);
@@ -94,25 +112,24 @@ const broadcastToOthers = (selfId, data) => {
   });
 };
 
-const wss = new SocketServer({ server, path: "/workbook/:id" });
+const wss = new SocketServer({ server, path: "/workbook/:objectId" });
 
 //const url = require('url')
 
 wss.on("connection", (ws, req) => {
-    console.log("query ", req.url); 
-   /* const [_path, params] = connectionRequest?.url?.split("?");
-    const connectionParams = queryString.parse(params);
-    console.log(connectionParams);
-    */
+ 
+   //const [_path, params] = connectionRequest?.url?.split("?");
+  //  const connectionParams = queryString.parse(params);
+    //console.log(connectionParams);
+    
  
   ws.id = uuid.v4();
   connections[ws.id] = ws;
-  console.log("ws.id " + ws.id)
+
   
   ws.on("message", async (data) => {
     const msg = JSON.parse(data.toString());
-      console.log("msg.req " + msg.req)
-      console.log(JSON.stringify(msg, null, 2));
+
      /* ws.id = msg.sheetId;
       connections[ws.id] = ws;
       console.log("ws.id " + ws.id)*/
@@ -125,13 +142,13 @@ wss.on("connection", (ws, req) => {
         })
       );
         ws.send(JSON.stringify({ req: "addPresences", data: presences }));
-        console.log("presences " + JSON.stringify(presences, null, 2));
+ 
+        await findOrCreateDocument(msg.documentId, msg.documentObjectId)
+
 
     } else if (msg.req === "op") {
       await applyOp(client.db(dbName).collection(collectionName), msg.data);
         broadcastToOthers(ws.id, data.toString());
-        console.log("op data.toString " + data.toString());
-        console.log("op msg.data " + JSON.stringify(msg.data, null, 2));
 
     } else if (msg.req === "addPresences") {
       ws.presences = msg.data;
@@ -139,8 +156,7 @@ wss.on("connection", (ws, req) => {
       presences = _.differenceBy(presences, msg.data, (v) =>
         v.userId == null ? v.username : v.userId
         ).concat(msg.data);
-        console.log("addPresences concat " + JSON.stringify(presences, null, 2));
-
+  
     } else if (msg.req === "removePresences") {
       broadcastToOthers(ws.id, data.toString());
     }

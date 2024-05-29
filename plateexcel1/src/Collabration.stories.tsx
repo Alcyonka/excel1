@@ -32,13 +32,14 @@ import { useParams } from 'react-router-dom';
       useEffect(() => {
           console.log("documentId ", documentId)
 
-        const socket = new WebSocket(`ws://localhost:8081/workbook/:id`);
-          //const socket = new WebSocket(`ws://localhost:8081/workbook/${documentId}`);
+         // const socket = new WebSocket(`ws://${window.location.hostname.toString()}:8081`);
+          const socket = new WebSocket(`ws://localhost:8081/workbook/:objectId`);
+        //  const socket = new WebSocket(`ws://localhost:8081/workbook/${documentId}`);
 
       wsRef.current = socket;
   
       socket.onopen = () => {
-          socket.send(JSON.stringify({ req: "getData", sheetId: documentId }));
+          socket.send(JSON.stringify({ req: "getData", documentId: documentId, documentObjectId: documentObjectId }));
       };
       socket.onmessage = (e) => {
         const msg = JSON.parse(e.data);
