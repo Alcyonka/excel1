@@ -11,6 +11,7 @@ import React, {
   import { v4 as uuidv4 } from "uuid";
 import { hashCode } from "./utils";
 import { useParams } from 'react-router-dom';
+import { io } from "socket.io-client";
   
   export default {
     component: Workbook,
@@ -19,7 +20,7 @@ import { useParams } from 'react-router-dom';
   const Template: StoryFn<typeof Workbook> = ({ ...args }) => {
     const [data, setData] = useState<Sheet[]>();
     const [error, setError] = useState(false);
-    const wsRef = useRef<WebSocket>();
+      const wsRef = useRef<any>(null);
     const workbookRef = useRef<WorkbookInstance>(null);
     const lastSelection = useRef<any>();
     const { username, userId } = useMemo(() => {
@@ -33,34 +34,53 @@ import { useParams } from 'react-router-dom';
           console.log("documentId ", documentId)
 
          // const socket = new WebSocket(`ws://${window.location.hostname.toString()}:8081`);
-          const socket = new WebSocket(`ws://localhost:8081/workbook/:objectId`);
-        //  const socket = new WebSocket(`ws://localhost:8081/workbook/${documentId}`);
+       //   const socket = new WebSocket(`ws://localhost:8081/workbook/:objectId`);
+          //  const socket = new WebSocket(`ws://localhost:8081/workbook/${documentId}`);
+          console.log("connect 0");
+          const socket = io("http://localhost:8081/workbook");
 
-      wsRef.current = socket;
-  
-      socket.onopen = () => {
-          socket.send(JSON.stringify({ req: "getData", documentId: documentId, documentObjectId: documentObjectId }));
-      };
-      socket.onmessage = (e) => {
-        const msg = JSON.parse(e.data);
-        if (msg.req === "getData") {
-          setData(msg.data.map((d: any) => ({ id: d._id, ...d })));
-        } else if (msg.req === "op") {
-          workbookRef.current?.applyOp(msg.data);
-        } else if (msg.req === "addPresences") {
-          workbookRef.current?.addPresences(msg.data);
-        } else if (msg.req === "removePresences") {
-          workbookRef.current?.removePresences(msg.data);
-        }
-      };
-      socket.onerror = () => {
-        setError(true);
-      };
+          console.log("connect 1");
+
+          if (wsRef.current == null) wsRef.current = socket;
+
+
+          console.log("connect 2");
+
+          socket.on('connect', () => {
+              console.log("connect send");
+              socket.send(JSON.stringify({ req: "getData", documentId: documentId, documentObjectId: documentObjectId }));
+          });
+          socket.on("message", message => {
+              console.log("message ");
+              const msg = JSON.parse(message.data);
+              if (msg.req === "getData") {
+                  console.log("msg.data ", msg.data);
+              setData(msg.data.map((d: any) => ({ id: d._id, ...d })));
+              } else if (msg.req === "op") {
+                  console.log("op ");
+              workbookRef.current?.applyOp(msg.data);
+              } else if (msg.req === "addPresences") {
+
+                  console.log("addPresences ");
+              workbookRef.current?.addPresences(msg.data);
+              } else if (msg.req === "removePresences") {
+                  console.log("removePresences ")
+              workbookRef.current?.removePresences(msg.data);
+            }
+          });
+
+          socket.on('connect_error', (err) => {
+              // the reason of the error, for example "xhr poll error"
+              console.log(err.message);
+
+
+          })
     }, []);
   
     const onOp = useCallback((op: Op[]) => {
       const socket = wsRef.current;
-      if (!socket) return;
+        if (!socket) return;
+        console.log("op send");
       socket.send(JSON.stringify({ req: "op", data: op }));
     }, []);
   
@@ -104,20 +124,7 @@ import { useParams } from 'react-router-dom';
     if (error)
       return (
         <div style={{ padding: 16 }}>
-          <p>Failed to connect to websocket server.</p>
-          <p>
-            Please note that this collabration demo connects to a local websocket
-            server (ws://localhost:8081/ws).
-          </p>
-          <p>
-            To make this work:
-            <ol>
-              <li>Clone the project</li>
-              <li>Run server in backend-demo/: node index.js</li>
-              <li>Make sure you also have mongodb running locally</li>
-              <li>Try again</li>
-            </ol>
-          </p>
+          failed
         </div>
       );
   
